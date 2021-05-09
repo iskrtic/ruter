@@ -1,4 +1,4 @@
-import React, { useState, useReducer } from "react";
+import React, { useState, useReducer, useEffect } from "react";
 
 // ostvarite funkcionalnost modala za domaći
 // izdizajnirajte bolje
@@ -6,22 +6,51 @@ import React, { useState, useReducer } from "react";
 const reducer = (state, akcija) => {
   switch (akcija.type) {
     case "promjena_inputa":
-      return { ...state, ime: akcija.payload };
+      //console.log("pišem");
+      return { ...state, ime: akcija.payload, showModal:false,  textModal: "" };
       break;
     case "unesi":
       const novaOsoba = {
         id: new Date().getTime().toString(),
         ime: akcija.payload,
       };
-      return { ...state, ime: "", osobe: [...state.osobe, novaOsoba] };
+      console.log("Dodajem osobu");
+      return { ...state, ime: "", osobe: [...state.osobe, novaOsoba], 
+               showModal:true,  
+               textModal: "Unesena osoba " + akcija.payload,
+               modalBackColor: "lightgreen ",
+              };
       break;
+
     case "obrisi":
+
+      const obrisanaOsoba = state.osobe.filter(
+        (osoba) => osoba.id === akcija.payload
+      );
+/*      
+      state.osobe.forEach((osoba) => {console.log(osoba.id + " " + osoba.ime)});
+      console.log("obrisanaOsoba akcija.payload=" + akcija.payload); 
+      console.log("obrisanaOsoba=" + obrisanaOsoba[0].ime);
+*/
       const noveOsobe = state.osobe.filter(
         (osoba) => osoba.id !== akcija.payload
       );
-      return { ...state, osobe: noveOsobe };
+
+
+      console.log("Brišem osobu");
+      return { ...state, osobe: noveOsobe, 
+               showModal:true,               
+               textModal: "Obrisana osoba " + obrisanaOsoba[0].ime,
+               modalBackColor: "red",
+             };
       break;
-    default:
+    
+      case "no_modal":
+        console.log("no_modal");
+        return { ...state, showModal:false,  textModal: "" };
+        break;      
+    
+        default:
       throw new Error("Nema takve radnje!");
       break;
   }
@@ -35,17 +64,32 @@ const initialState = {
   ],
   showModal: false,
   textModal: "",
+  modalBackColor: "",
 };
 
 const ReducerGlupi = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
+  let modalBackColor ="red";
+
+  useEffect(() => {
+
+    const timer = setTimeout(() => {
+        dispatch({ type: "no_modal", payload: "" })
+        console.log('This will run after 2 seconds!');
+        }, 2000);
+    return () => {clearTimeout(timer);}
+
+  }, [state.showModal]); 
+
+
   return (
     <div className='container'>
       <div className='col-md-6' style={{ margin: "auto" }}>
-        <div style={{ width: "100%" }} name='modal'>
-          a
+        <div style={{width: "100%", backgroundColor: state.modalBackColor}} name='modal'>
+          {state.textModal}
         </div>
+        <br/>
         <div style={{ width: "100%" }} name='unos'>
           <input
             type='text'
